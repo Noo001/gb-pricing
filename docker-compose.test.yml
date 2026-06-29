@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gb_pricing_test
+      POSTGRES_USER: gb_pricing
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mock-api:
+    image: php:8.3-cli-alpine
+    volumes:
+      - ./docker/test/mock-api.php:/app/mock-api.php:ro
+    working_dir: /app
+    command: ["php", "-S", "0.0.0.0:9000", "mock-api.php"]
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/test/Dockerfile
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+      - mock-api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: gb_pricing_test
+      DB_USER: gb_pricing
+      DB_PASSWORD: secret
+
+volumes:
+  pgdata:

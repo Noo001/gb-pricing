@@ -2,11 +2,11 @@
 
 return [
     'db' => [
-        'host' => 'localhost',
-        'port' => '5432',
-        'database' => 'gb_pricing',
-        'username' => 'gb_pricing_user',
-        'password' => 'your_db_password',
+        'host' => $_ENV['DB_HOST'] ?? 'localhost',
+        'port' => $_ENV['DB_PORT'] ?? '5432',
+        'database' => $_ENV['DB_NAME'] ?? 'gb_pricing',
+        'username' => $_ENV['DB_USER'] ?? 'gb_pricing_user',
+        'password' => $_ENV['DB_PASSWORD'] ?? 'your_db_password',
         'charset' => 'utf8',
     ],
 ];
