@@ -8,4 +8,6 @@ return [
         'password' => $_ENV['DB_PASSWORD'] ?? 'your_db_password',
         'sslmode' => $_ENV['DB_SSLMODE'] ?? 'require',
     ],
+    // Токен для webhook автодеплоя (public/deploy.php?token=...)
+    'deploy_token' => $_ENV['DEPLOY_TOKEN'] ?? '',
 ];
