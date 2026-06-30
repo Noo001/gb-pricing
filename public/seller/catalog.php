@@ -19,7 +19,7 @@ $where = ['1=1'];
 $params = [];
 
 if ($search !== '') {
-    $where[] = "name LIKE ?";
+    $where[] = "name ILIKE ?";
     $params[] = '%' . $search . '%';
 }
 if ($brand !== '') {
@@ -52,7 +52,15 @@ $products = $stmt->fetchAll();
 
 $brands = $pdo->query('SELECT DISTINCT brand FROM products ORDER BY brand')->fetchAll(FETCH_COLUMN);
 $categories = $pdo->query('SELECT DISTINCT category FROM products ORDER BY category')->fetchAll(FETCH_COLUMN);
-$subcategories = $pdo->query('SELECT DISTINCT subcategory FROM products ORDER BY subcategory')->fetchAll(FETCH_COLUMN);
+
+if ($category !== '') {
+    $subcatStmt = $pdo->prepare('SELECT DISTINCT subcategory FROM products WHERE category = ? ORDER BY subcategory');
+    $subcatStmt->execute([$category]);
+    $subcategories = $subcatStmt->fetchAll(FETCH_COLUMN);
+} else {
+    $subcategories = $pdo->query('SELECT DISTINCT subcategory FROM products ORDER BY subcategory')->fetchAll(FETCH_COLUMN);
+}
+
 $countries = $pdo->query('SELECT DISTINCT country FROM products ORDER BY country')->fetchAll(FETCH_COLUMN);
 
 function buildQuery(array $changes): string {
@@ -87,7 +95,7 @@ function buildQuery(array $changes): string {
                 <div class="filters">
                     <div>
                         <label>Поиск</label>
-                        <input type="text" name="search" value="<?= e($search) ?>" placeholder="Название товара">
+                        <input type="text" name="search" value="<?= e($search) ?>" placeholder="Название товара (регистр не важен)">
                     </div>
                     <div>
                         <label>Бренд</label>
