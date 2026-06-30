@@ -1,6 +1,6 @@
 <?php
-// Простой webhook для автодеплоя с GitHub.
-// Добавь в GitHub: Settings -> Webhooks -> Add webhook
+// Webhook для автодеплоя с GitHub.
+// GitHub: Settings -> Webhooks -> Add webhook
 // Payload URL: http://pricing.salevrn.ru/deploy.php?token=YOUR_TOKEN
 // Content type: application/json
 // Events: Just the push event
@@ -21,4 +21,9 @@ chdir($projectDir);
 
 echo "Pulling from GitHub...\n";
 echo shell_exec('/usr/local/bin/git pull origin main 2>&1');
+
+echo "\nDeploying public/ to public_html/...\n";
+echo shell_exec('cp -r public/* public_html/ 2>&1');
+echo shell_exec('cp public/.htaccess public_html/ 2>&1');
+
 echo "\nDone.\n";
