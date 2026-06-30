@@ -77,14 +77,22 @@ try {
         throw new Exception('Некорректный ответ API: ' . substr($response, 0, 500));
     }
 
-    $groups = $data['result'];
+    $rawResult = $data['result'];
     $items = [];
-    foreach ($groups as $group) {
-        if (!empty($group['items']) && is_array($group['items'])) {
-            foreach ($group['items'] as $item) {
-                $items[] = $item;
+
+    // API может возвращать либо массив товаров, либо массив групп с items
+    if (!empty($rawResult) && isset($rawResult[0]['items']) && is_array($rawResult[0]['items'])) {
+        // Массив групп
+        foreach ($rawResult as $group) {
+            if (!empty($group['items']) && is_array($group['items'])) {
+                foreach ($group['items'] as $item) {
+                    $items[] = $item;
+                }
             }
         }
+    } else {
+        // Массив товаров напрямую
+        $items = $rawResult;
     }
 
     $itemsCount = count($items);
