@@ -56,7 +56,8 @@
 - `public/admin/sync.php` + кнопка в админке: ручной запуск синхронизации.
 - `src/functions.php`: добавлена `formatSyncError()` — из JSON-ответа API извлекается человекочитаемое сообщение об ошибке.
 - `public/admin/index.php` и `public/admin/sync_log.php`: ошибки синхронизации выводятся без HTML-тегов и JSON, с переносами строк.
-- `public/deploy.php`: webhook для автодеплоя при push в GitHub; токен читается из `src/config.php` (`deploy_token`).
+- `public/deploy.php`: webhook для автодеплоя при push в GitHub; токен читается из `src/config.php` (`deploy_token`). После `git pull` копирует `public/` в `public_html/` для структуры Бегета.
+- `public/seller/catalog.php`: регистронезависимый поиск (`ILIKE`) и каскадная фильтрация подкатегорий по выбранной категории.
 
 ## Структура
 
