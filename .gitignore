@@ -1,4 +1,23 @@
+# Application secrets and local config
 /src/config.php
-/vendor/
 /.env
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Logs
 *.log
+
+# IDE / editors
+/.vscode/
+/.idea/
+
+# AI assistants / agents
+/.mimocode/
+/.kimi/
+/.cursor/
+
+# OS files
+.DS_Store
+Thumbs.db
