@@ -1,5 +1,4 @@
 <?php
-
 return [
     'db' => [
         'host' => $_ENV['DB_HOST'] ?? 'localhost',
@@ -7,6 +6,6 @@ return [
         'database' => $_ENV['DB_NAME'] ?? 'gb_pricing',
         'username' => $_ENV['DB_USER'] ?? 'gb_pricing_user',
         'password' => $_ENV['DB_PASSWORD'] ?? 'your_db_password',
-        'charset' => 'utf8',
+        'sslmode' => $_ENV['DB_SSLMODE'] ?? 'require',
     ],
 ];

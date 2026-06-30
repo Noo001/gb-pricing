@@ -1,5 +1,16 @@
 <?php
 
+// Настройки сессии до её старта
+$cookieParams = session_get_cookie_params();
+session_set_cookie_params([
+    'lifetime' => $cookieParams['lifetime'],
+    'path' => '/',
+    'domain' => $cookieParams['domain'],
+    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+
 session_start();
 
 require_once __DIR__ . '/db.php';
@@ -43,6 +54,7 @@ function login(string $login, string $password): bool {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password_hash'])) {
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         return true;
     }
@@ -52,4 +64,5 @@ function login(string $login, string $password): bool {
 
 function logout(): void {
     unset($_SESSION['user_id'], $_SESSION['csrf_token'], $_SESSION['flash']);
+    session_regenerate_id(true);
 }

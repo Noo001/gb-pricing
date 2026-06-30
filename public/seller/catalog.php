@@ -19,7 +19,7 @@ $where = ['1=1'];
 $params = [];
 
 if ($search !== '') {
-    $where[] = "name ILIKE ?";
+    $where[] = "name LIKE ?";
     $params[] = '%' . $search . '%';
 }
 if ($brand !== '') {
@@ -50,10 +50,10 @@ $stmt = $pdo->prepare("SELECT * FROM products WHERE {$whereSql} ORDER BY brand, 
 $stmt->execute([...$params, $perPage, $offset]);
 $products = $stmt->fetchAll();
 
-$brands = $pdo->query('SELECT DISTINCT brand FROM products ORDER BY brand')->fetchAll(PDO::FETCH_COLUMN);
-$categories = $pdo->query('SELECT DISTINCT category FROM products ORDER BY category')->fetchAll(PDO::FETCH_COLUMN);
-$subcategories = $pdo->query('SELECT DISTINCT subcategory FROM products ORDER BY subcategory')->fetchAll(PDO::FETCH_COLUMN);
-$countries = $pdo->query('SELECT DISTINCT country FROM products ORDER BY country')->fetchAll(PDO::FETCH_COLUMN);
+$brands = $pdo->query('SELECT DISTINCT brand FROM products ORDER BY brand')->fetchAll(FETCH_COLUMN);
+$categories = $pdo->query('SELECT DISTINCT category FROM products ORDER BY category')->fetchAll(FETCH_COLUMN);
+$subcategories = $pdo->query('SELECT DISTINCT subcategory FROM products ORDER BY subcategory')->fetchAll(FETCH_COLUMN);
+$countries = $pdo->query('SELECT DISTINCT country FROM products ORDER BY country')->fetchAll(FETCH_COLUMN);
 
 function buildQuery(array $changes): string {
     $params = array_merge($_GET, $changes);

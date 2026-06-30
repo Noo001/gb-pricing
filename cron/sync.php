@@ -14,6 +14,10 @@ function logMessage(string $message): void {
     fwrite(STDOUT, "[{$date}] {$message}\n");
 }
 
+function sanitizeToken(string $token): string {
+    return str_replace(["\r", "\n"], '', trim($token));
+}
+
 $pdo = getDb();
 
 $running = $pdo->query("SELECT id FROM sync_log WHERE status = 'running' ORDER BY id DESC LIMIT 1")->fetch();
@@ -23,16 +27,18 @@ if ($running) {
 }
 
 $baseUrl = rtrim(getSetting('api_base_url', 'https://api-c.rmgroup.website'), '/');
-$token = getSetting('api_token', '');
+$token = sanitizeToken(getSetting('api_token', ''));
 
 if ($baseUrl === '' || $token === '') {
     logMessage('Не заданы настройки API. Синхронизация отменена.');
     exit(1);
 }
 
-$stmt = $pdo->prepare("INSERT INTO sync_log (started_at, status) VALUES (CURRENT_TIMESTAMP, 'running') RETURNING id");
-$stmt->execute();
-$logId = $stmt->fetchColumn();
+$syncStartedAt = date('Y-m-d H:i:s');
+
+$logStmt = $pdo->prepare("INSERT INTO sync_log (started_at, status) VALUES (CURRENT_TIMESTAMP, 'running') RETURNING id");
+$logStmt->execute();
+$logId = (int) $logStmt->fetchColumn();
 
 $itemsCount = 0;
 $errorMessage = null;
@@ -49,8 +55,7 @@ try {
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'Accept: application/json',
-        'Authorization: Bearer ' . $token,
-        'X-API-Token: ' . $token,
+        'Auth: ' . $token,
     ]);
     curl_setopt($ch, CURLOPT_TIMEOUT, 120);
 
@@ -85,6 +90,10 @@ try {
     $itemsCount = count($items);
     logMessage("Получено товаров: {$itemsCount}");
 
+    if ($itemsCount === 0) {
+        throw new Exception('API вернуло пустой каталог. Синхронизация отменена, чтобы не удалить существующие товары.');
+    }
+
     $pdo->beginTransaction();
 
     $insert = $pdo->prepare('
@@ -100,18 +109,31 @@ try {
     ');
 
     foreach ($items as $item) {
+        $externalId = (string) ($item['id'] ?? '');
+        $country = (string) ($item['country'] ?? '');
+
+        if ($externalId === '') {
+            logMessage('Пропущен товар без external_id.');
+            continue;
+        }
+
         $insert->execute([
-            $item['id'] ?? '',
+            $externalId,
             $item['brand'] ?? '',
             $item['category'] ?? '',
             $item['subcategory'] ?? '',
             $item['name'] ?? '',
-            $item['country'] ?? '',
+            $country,
             $item['cost'] ?? 0,
         ]);
     }
 
     recalculateAllPrices();
+
+    $deleteStmt = $pdo->prepare('DELETE FROM products WHERE synced_at < ?');
+    $deleteStmt->execute([$syncStartedAt]);
+    $deleted = $deleteStmt->rowCount();
+    logMessage("Удалено устаревших товаров: {$deleted}");
 
     setSetting('last_sync_at', date('Y-m-d H:i:s'));
 

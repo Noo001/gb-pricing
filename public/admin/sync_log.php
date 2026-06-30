@@ -50,7 +50,7 @@ $logs = $pdo->query('SELECT * FROM sync_log ORDER BY id DESC LIMIT 50')->fetchAl
                             <td><?= e($log['finished_at'] ?? '-') ?></td>
                             <td><?= e($log['status']) ?></td>
                             <td><?= (int) $log['items_count'] ?></td>
-                            <td><?= e($log['error_message'] ?? '') ?></td>
+                            <td><?= e(formatSyncError($log['error_message'] ?? '')) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>

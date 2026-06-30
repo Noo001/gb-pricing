@@ -7,14 +7,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrfToken($_POST['csrf_token'] ?? null)) {
         flashMessage('error', 'Недействительный CSRF-токен.');
     } else {
-        setSetting('api_base_url', rtrim($_POST['api_base_url'] ?? '', '/'));
-        setSetting('api_token', $_POST['api_token'] ?? '');
-        setSetting('default_markup_percent', (float) ($_POST['default_markup_percent'] ?? 0));
-        setSetting('rounding_step', (int) ($_POST['rounding_step'] ?? 100));
-        setSetting('sync_interval_minutes', (int) ($_POST['sync_interval_minutes'] ?? 15));
+        $apiBaseUrl = rtrim($_POST['api_base_url'] ?? '', '/');
+        $apiToken = trim($_POST['api_token'] ?? '');
+        $defaultMarkup = (float) ($_POST['default_markup_percent'] ?? 0);
+        $roundingStep = (int) ($_POST['rounding_step'] ?? 100);
+        $syncInterval = (int) ($_POST['sync_interval_minutes'] ?? 15);
 
-        recalculateAllPrices();
-        flashMessage('success', 'Настройки сохранены. Цены пересчитаны.');
+        if ($apiBaseUrl === '' || !filter_var($apiBaseUrl, FILTER_VALIDATE_URL)) {
+            flashMessage('error', 'Укажите корректный URL API.');
+        } elseif ($apiToken === '') {
+            flashMessage('error', 'API-токен не может быть пустым.');
+        } elseif ($roundingStep <= 0) {
+            flashMessage('error', 'Шаг округления должен быть больше 0.');
+        } else {
+            setSetting('api_base_url', $apiBaseUrl);
+            setSetting('api_token', $apiToken);
+            setSetting('default_markup_percent', $defaultMarkup);
+            setSetting('rounding_step', $roundingStep);
+            setSetting('sync_interval_minutes', $syncInterval);
+
+            recalculateAllPrices();
+            flashMessage('success', 'Настройки сохранены. Цены пересчитаны.');
+        }
     }
 
     header('Location: /admin/settings.php');
@@ -56,7 +70,7 @@ $settings = [
         <h1>Настройки</h1>
 
         <?php foreach (getFlashMessages() as $flash): ?>
-            <div class="alert alert-<?= $flash['type'] ?>"><?= e($flash['message']) ?></div>
+            <div class="alert alert-<?= $flash['type'] ?>"><?= $flash['message'] ?></div>
         <?php endforeach; ?>
 
         <div class="card">
@@ -67,8 +81,8 @@ $settings = [
                 <input type="url" name="api_base_url" value="<?= e($settings['api_base_url']) ?>" required>
 
                 <label>API-токен</label>
-                <input type="text" name="api_token" value="<?= e($settings['api_token']) ?>" required>
-                <p class="small">Токен, который прислали по почте.</p>
+                <input type="password" name="api_token" value="<?= e($settings['api_token']) ?>" required autocomplete="off">
+                <p class="small">Токен, который прислали по почте. Хранится в базе в открытом виде.</p>
 
                 <label>Накрутка по умолчанию (%)</label>
                 <input type="number" step="0.01" name="default_markup_percent" value="<?= e($settings['default_markup_percent']) ?>" required>

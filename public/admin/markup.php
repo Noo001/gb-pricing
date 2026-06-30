@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$scope, $target, $percent]);
                 recalculateAllPrices();
                 flashMessage('success', 'Накрутка добавлена. Цены пересчитаны.');
-            } catch (PDOException $e) {
+            } catch (Exception $e) {
                 flashMessage('error', 'Такое правило уже существует.');
             }
         }
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $rules = $pdo->query('SELECT * FROM markup_rules ORDER BY scope, target')->fetchAll();
-$categories = $pdo->query('SELECT DISTINCT category FROM products ORDER BY category')->fetchAll(PDO::FETCH_COLUMN);
+$categories = $pdo->query('SELECT DISTINCT category FROM products ORDER BY category')->fetchAll(FETCH_COLUMN);
 
 ?>
 <!DOCTYPE html>

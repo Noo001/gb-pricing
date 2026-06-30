@@ -1,4 +1,24 @@
+# GB Pricing — public/.htaccess
+# Document root сайта должен указывать именно на эту папку (public/).
+
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteRule ^(src|cron|sql|docker|\.git)/ - [F,L,NC]
+
+# Запрет листинга директорий
+Options -Indexes
+
+# Базовые security-заголовки
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Защита конфигов и служебных файлов
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(sql|log|md|yml|yaml|json|lock)$">
+    Require all denied
+</FilesMatch>

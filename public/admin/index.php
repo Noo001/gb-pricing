@@ -40,13 +40,22 @@ $lastLogs = $pdo->query('SELECT * FROM sync_log ORDER BY id DESC LIMIT 5')->fetc
         <h1>Обзор</h1>
 
         <?php foreach (getFlashMessages() as $flash): ?>
-            <div class="alert alert-<?= $flash['type'] ?>"><?= e($flash['message']) ?></div>
+            <div class="alert alert-<?= $flash['type'] ?>">
+                <?php foreach (explode("\n", $flash['message']) as $line): ?>
+                    <?= nl2br(e(formatSyncError($line)), false) ?><br>
+                <?php endforeach; ?>
+            </div>
         <?php endforeach; ?>
 
         <div class="card">
             <p><strong>Товаров в каталоге:</strong> <?= (int) $stats['products'] ?></p>
             <p><strong>Продавцов:</strong> <?= (int) $stats['sellers'] ?></p>
             <p><strong>Последняя синхронизация:</strong> <?= e($stats['last_sync']) ?></p>
+
+            <form method="post" action="/admin/sync.php" style="margin-top: 16px;">
+                <input type="hidden" name="csrf_token" value="<?= e(generateCsrfToken()) ?>">
+                <button type="submit" class="btn">Запустить синхронизацию</button>
+            </form>
         </div>
 
         <div class="card">
@@ -66,7 +75,7 @@ $lastLogs = $pdo->query('SELECT * FROM sync_log ORDER BY id DESC LIMIT 5')->fetc
                             <td><?= e($log['finished_at'] ?? $log['started_at']) ?></td>
                             <td><?= e($log['status']) ?></td>
                             <td><?= (int) $log['items_count'] ?></td>
-                            <td><?= e($log['error_message'] ?? '') ?></td>
+                            <td><?= e(formatSyncError($log['error_message'] ?? '')) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>

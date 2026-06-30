@@ -19,7 +19,7 @@ function verifyCsrfToken(?string $token): bool {
 
 function getSetting(string $key, $default = null) {
     $pdo = getDb();
-    $stmt = $pdo->prepare('SELECT value FROM settings WHERE key = ?');
+    $stmt = $pdo->prepare('SELECT "value" FROM settings WHERE "key" = ?');
     $stmt->execute([$key]);
     $row = $stmt->fetch();
     return $row ? $row['value'] : $default;
@@ -27,7 +27,7 @@ function getSetting(string $key, $default = null) {
 
 function setSetting(string $key, $value): void {
     $pdo = getDb();
-    $stmt = $pdo->prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value');
+    $stmt = $pdo->prepare('INSERT INTO settings ("key", "value") VALUES (?, ?) ON CONFLICT ("key") DO UPDATE SET "value" = EXCLUDED."value"');
     $stmt->execute([$key, (string) $value]);
 }
 
@@ -48,11 +48,18 @@ function getMarkupPercent(string $externalId, string $category): float {
         return (float) $row['percent'];
     }
 
+    $stmt = $pdo->prepare('SELECT percent FROM markup_rules WHERE scope = ? LIMIT 1');
+    $stmt->execute(['global']);
+    $row = $stmt->fetch();
+    if ($row) {
+        return (float) $row['percent'];
+    }
+
     return (float) getSetting('default_markup_percent', 0);
 }
 
 function calculatePrice(float $cost, float $percent): int {
-    $raw = $cost * (1 + $percent / 100);
+    $raw = round($cost * (1 + $percent / 100), 2);
     $step = (int) getSetting('rounding_step', 100);
     if ($step <= 0) {
         $step = 100;
@@ -81,4 +88,20 @@ function getFlashMessages(): array {
     $messages = $_SESSION['flash'] ?? [];
     unset($_SESSION['flash']);
     return $messages;
+}
+
+function formatSyncError(?string $error): string {
+    if ($error === null || $error === '') {
+        return '';
+    }
+
+    // Извлекаем JSON после "HTTP XXX:"
+    if (preg_match('/HTTP \d+:\s*(\{.*\})/s', $error, $m)) {
+        $data = json_decode($m[1], true);
+        if (is_array($data) && isset($data['error']['message'])) {
+            return $data['error']['message'];
+        }
+    }
+
+    return $error;
 }

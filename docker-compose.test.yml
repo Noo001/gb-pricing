@@ -6,9 +6,9 @@ services:
       POSTGRES_USER: gb_pricing
       POSTGRES_PASSWORD: secret
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   mock-api:
     image: php:8.3-cli-alpine
@@ -35,6 +35,7 @@ services:
       DB_NAME: gb_pricing_test
       DB_USER: gb_pricing
       DB_PASSWORD: secret
+      DB_SSLMODE: disable
 
 volumes:
-  pgdata:
+  postgres_data:

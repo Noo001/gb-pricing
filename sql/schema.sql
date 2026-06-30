@@ -1,8 +1,6 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 CREATE TABLE IF NOT EXISTS settings (
     key VARCHAR(100) PRIMARY KEY,
-    value TEXT NOT NULL DEFAULT '',
+    value TEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -17,11 +15,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS markup_rules (
     id SERIAL PRIMARY KEY,
     scope VARCHAR(20) NOT NULL CHECK (scope IN ('global', 'category', 'product')),
-    target VARCHAR(255),
+    target VARCHAR(255) DEFAULT NULL,
     percent DECIMAL(5,2) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_scope_target UNIQUE (scope, target)
+    UNIQUE (scope, target)
 );
 
 CREATE TABLE IF NOT EXISTS products (
@@ -36,18 +34,18 @@ CREATE TABLE IF NOT EXISTS products (
     price DECIMAL(12,2) NOT NULL DEFAULT 0,
     synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_external_country UNIQUE (external_id, country)
+    UNIQUE (external_id, country)
 );
 
-CREATE INDEX idx_products_brand ON products(brand);
-CREATE INDEX idx_products_category ON products(category);
-CREATE INDEX idx_products_subcategory ON products(subcategory);
-CREATE INDEX idx_products_name ON products(name);
+CREATE INDEX IF NOT EXISTS idx_products_brand ON products(brand);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products(subcategory);
+CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
 
 CREATE TABLE IF NOT EXISTS sync_log (
     id SERIAL PRIMARY KEY,
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    finished_at TIMESTAMP,
+    finished_at TIMESTAMP NULL DEFAULT NULL,
     items_count INT DEFAULT 0,
     status VARCHAR(20) NOT NULL CHECK (status IN ('running', 'success', 'error')),
     error_message TEXT
@@ -55,9 +53,9 @@ CREATE TABLE IF NOT EXISTS sync_log (
 
 INSERT INTO settings (key, value) VALUES
     ('api_base_url', 'https://api-c.rmgroup.website'),
-    ('api_token', ''),
+    ('api_token', 'fa070fd94059505dff35021632a5522e24681c1429dfe92ee63266e4709dfe08'),
     ('default_markup_percent', '15'),
     ('rounding_step', '100'),
     ('sync_interval_minutes', '15'),
     ('last_sync_at', '')
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;

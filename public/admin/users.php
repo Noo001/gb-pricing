@@ -22,13 +22,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare('INSERT INTO users (login, password_hash, role) VALUES (?, ?, ?)');
                 $stmt->execute([$login, password_hash($password, PASSWORD_DEFAULT), $role]);
                 flashMessage('success', 'Пользователь создан.');
-            } catch (PDOException $e) {
+            } catch (Exception $e) {
                 flashMessage('error', 'Такой логин уже существует.');
             }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
-        if ($id > 0) {
+        if ($id <= 0) {
+            flashMessage('error', 'Некорректный ID пользователя.');
+        } elseif ($id === ($_SESSION['user_id'] ?? 0)) {
+            flashMessage('error', 'Нельзя удалить текущего пользователя.');
+        } else {
             $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$id]);
             flashMessage('success', 'Пользователь удалён.');
         }
